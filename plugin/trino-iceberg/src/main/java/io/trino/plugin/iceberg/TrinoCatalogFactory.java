@@ -69,6 +69,8 @@ class TrinoCatalogFactory
         switch (config.getCatalogType()) {
             case HIVE:
                 return new TrinoHiveCatalog(catalogName, metastore, hdfsEnvironment, typeManager, tableOperationsProvider);
+            case HADOOP:
+                return new TrinoIcebergHadoopCatalog(catalogName, config, hdfsEnvironment);
             default:
                 throw new TrinoException(NOT_SUPPORTED, "Unsupported Trino Iceberg catalog type " + config.getCatalogType());
         }
