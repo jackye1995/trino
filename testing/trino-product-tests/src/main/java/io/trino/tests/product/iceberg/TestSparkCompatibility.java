@@ -423,6 +423,29 @@ public class TestSparkCompatibility
         onTrino().executeQuery("DROP TABLE " + prestoTableName(trinoTable));
     }
 
+    @Test(groups = {ICEBERG, PROFILE_SPECIFIC_TESTS})
+    public void testPrestoReadingSparkObjectStorageLocationProviderData()
+    {
+        String baseTableName = "test_object_storage_location_provider";
+        String sparkTableName = sparkTableName(baseTableName);
+
+        String sparkTableDefinition = "CREATE TABLE %s (_string STRING, _bigint BIGINT) USING ICEBERG OPTIONS (" +
+                "'write.object-storage.enabled'=true," +
+                "'write.object-storage.path'='hdfs://hadoop-master:9000/user/hive/warehouse/test_object_storage_location_provider/obj-data'" +
+                ")";
+        onSpark().executeQuery(format(sparkTableDefinition, sparkTableName));
+        onSpark().executeQuery(format("INSERT INTO %s VALUES ('a_string', 1000000000000000)", sparkTableName));
+
+        Row row = row("a_string", 1000000000000000L);
+        QueryResult sparkSelect = onSpark().executeQuery(format("SELECT _string, _bigint FROM %s", sparkTableName));
+        assertThat(sparkSelect).containsOnly(row);
+
+        QueryResult prestoSelect = onTrino().executeQuery(format("SELECT _string, _bigint FROM %s", prestoTableName(baseTableName)));
+        assertThat(prestoSelect).containsOnly(row);
+
+        onSpark().executeQuery("DROP TABLE " + sparkTableName);
+    }
+
     private static String sparkTableName(String tableName)
     {
         return format("%s.%s.%s", SPARK_CATALOG, TEST_SCHEMA_NAME, tableName);
