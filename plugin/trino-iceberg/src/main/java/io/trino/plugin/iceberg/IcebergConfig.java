@@ -13,6 +13,7 @@
  */
 package io.trino.plugin.iceberg;
 
+import com.google.common.collect.ImmutableMap;
 import io.airlift.configuration.Config;
 import io.airlift.configuration.ConfigDescription;
 import io.trino.plugin.hive.HiveCompressionCodec;
@@ -21,9 +22,12 @@ import org.apache.iceberg.FileFormat;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
+import java.util.Map;
+
 import static io.trino.plugin.hive.HiveCompressionCodec.GZIP;
 import static io.trino.plugin.iceberg.CatalogType.HIVE;
 import static io.trino.plugin.iceberg.IcebergFileFormat.ORC;
+import static org.apache.iceberg.CatalogProperties.WAREHOUSE_LOCATION;
 
 public class IcebergConfig
 {
@@ -32,6 +36,8 @@ public class IcebergConfig
     private boolean useFileSizeFromMetadata = true;
     private int maxPartitionsPerWriter = 100;
     private CatalogType catalogType = HIVE;
+    private String catalogWarehouse;
+    private int catalogCacheSize = 10;
 
     public CatalogType getCatalogType()
     {
@@ -42,6 +48,31 @@ public class IcebergConfig
     public IcebergConfig setCatalogType(CatalogType catalogType)
     {
         this.catalogType = catalogType;
+        return this;
+    }
+
+    public String getCatalogWarehouse()
+    {
+        return catalogWarehouse;
+    }
+
+    @Config("iceberg.catalog.warehouse")
+    public IcebergConfig setCatalogWarehouse(String catalogWarehouse)
+    {
+        this.catalogWarehouse = catalogWarehouse;
+        return this;
+    }
+
+    @Min(1)
+    public int getCatalogCacheSize()
+    {
+        return catalogCacheSize;
+    }
+
+    @Config("iceberg.catalog.cache-size")
+    public IcebergConfig setCatalogCacheSize(int catalogCacheSize)
+    {
+        this.catalogCacheSize = catalogCacheSize;
         return this;
     }
 
@@ -104,5 +135,10 @@ public class IcebergConfig
     {
         this.maxPartitionsPerWriter = maxPartitionsPerWriter;
         return this;
+    }
+
+    public static Map<String, String> convertToCatalogProperties(IcebergConfig config)
+    {
+        return ImmutableMap.of(WAREHOUSE_LOCATION, config.getCatalogWarehouse());
     }
 }

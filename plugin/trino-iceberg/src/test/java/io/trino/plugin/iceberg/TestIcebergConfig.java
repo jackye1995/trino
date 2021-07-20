@@ -38,7 +38,9 @@ public class TestIcebergConfig
                 .setCompressionCodec(GZIP)
                 .setUseFileSizeFromMetadata(true)
                 .setMaxPartitionsPerWriter(100)
-                .setCatalogType(HIVE));
+                .setCatalogType(HIVE)
+                .setCatalogWarehouse(null)
+                .setCatalogCacheSize(10));
     }
 
     @Test
@@ -50,6 +52,8 @@ public class TestIcebergConfig
                 .put("iceberg.use-file-size-from-metadata", "false")
                 .put("iceberg.max-partitions-per-writer", "222")
                 .put("iceberg.catalog.type", "HADOOP")
+                .put("iceberg.catalog.warehouse", "s3://bucket/root")
+                .put("iceberg.catalog.cache-size", "3")
                 .build();
 
         IcebergConfig expected = new IcebergConfig()
@@ -57,7 +61,10 @@ public class TestIcebergConfig
                 .setCompressionCodec(HiveCompressionCodec.NONE)
                 .setUseFileSizeFromMetadata(false)
                 .setMaxPartitionsPerWriter(222)
-                .setCatalogType(HADOOP);
+                .setMaxPartitionsPerWriter(222)
+                .setCatalogType(HADOOP)
+                .setCatalogWarehouse("s3://bucket/root")
+                .setCatalogCacheSize(3);
 
         assertFullMapping(properties, expected);
     }
